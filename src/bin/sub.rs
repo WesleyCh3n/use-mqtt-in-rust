@@ -1,12 +1,12 @@
 use dotenv::dotenv;
 use paho_mqtt as mqtt;
 
-use my_mqtt_lib::{get_mqtt_client, try_reconnect, get_mqtt_config};
+use my_mqtt_lib::{get_client, try_reconnect, get_mqtt_config};
 
 fn main() -> Result<(), mqtt::Error> {
     dotenv().ok();
     let cfg = get_mqtt_config();
-    let client = get_mqtt_client(cfg)?;
+    let client = get_client(cfg)?;
     client.subscribe("cmd/pub", 0)?;
     let rx = client.start_consuming();
     for msg in rx.iter() {

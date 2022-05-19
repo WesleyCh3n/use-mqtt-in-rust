@@ -2,6 +2,7 @@ use paho_mqtt as mqtt;
 use std::time::Duration;
 use std::{env, thread};
 
+#[derive(Clone)]
 pub struct MqttConfig {
     pub uri: String,
     pub user_name: String,
@@ -18,7 +19,7 @@ pub fn get_mqtt_config() -> MqttConfig {
     }
 }
 
-pub fn get_mqtt_client(cfg: MqttConfig) -> Result<mqtt::Client, mqtt::Error> {
+pub fn get_client(cfg: MqttConfig) -> Result<mqtt::Client, mqtt::Error> {
     let opts = mqtt::CreateOptionsBuilder::new()
         .mqtt_version(mqtt::MQTT_VERSION_5)
         .server_uri(cfg.uri)
@@ -37,6 +38,31 @@ pub fn get_mqtt_client(cfg: MqttConfig) -> Result<mqtt::Client, mqtt::Error> {
 
     let client = mqtt::Client::new(opts)?;
     client.connect(connect_opts)?;
+
+    Ok(client)
+}
+
+pub fn get_async_client(
+    cfg: MqttConfig,
+) -> Result<mqtt::AsyncClient, mqtt::Error> {
+    let opts = mqtt::CreateOptionsBuilder::new()
+        .mqtt_version(mqtt::MQTT_VERSION_5)
+        .server_uri(cfg.uri)
+        .client_id(cfg.client_id)
+        .client_id("client1")
+        .finalize();
+
+    let connect_opts = mqtt::ConnectOptionsBuilder::new()
+        .user_name(cfg.user_name)
+        .password(cfg.password)
+        .mqtt_version(mqtt::MQTT_VERSION_5)
+        .keep_alive_interval(Duration::from_secs(60))
+        .automatic_reconnect(Duration::from_secs(1), Duration::from_secs(60))
+        .clean_session(true)
+        .finalize();
+
+    let client = mqtt::AsyncClient::new(opts)?;
+    client.connect(connect_opts).wait()?;
 
     Ok(client)
 }
