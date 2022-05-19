@@ -6,10 +6,10 @@ use sysinfo::{ProcessExt, System, SystemExt};
 
 use my_mqtt_lib::{get_client, get_mqtt_config, try_reconnect};
 
-fn control_task(node: String, raw_cmd: String) -> Message {
+fn control_task(payload: String, node: String) -> Message {
     let output = Command::new("sh")
         .arg("-c")
-        .arg(raw_cmd)
+        .arg(payload)
         .output()
         .expect("failed to execute process");
     let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
@@ -83,8 +83,8 @@ fn main() {
         if let Some(msg) = msg {
             if msg.topic() == topics[0] || msg.topic() == topics[1] {
                 cli.publish(control_task(
-                    node.clone(),
                     msg.payload_str().into(),
+                    node.clone(),
                 ))
                 .unwrap();
             } else if msg.topic() == topics[2] {
